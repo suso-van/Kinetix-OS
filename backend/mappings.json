@@ -6,10 +6,14 @@
     "OPEN_PALM":          "home_page",
     "SWIPE_LEFT":         "prev_tab",
     "SWIPE_RIGHT":        "next_tab",
+    "WHOLE_HAND_SWIPE_LEFT":  "switch_app_left",
+    "WHOLE_HAND_SWIPE_RIGHT": "switch_app_right",
     "TWO_FINGER_SWIPE_LEFT":  "prev_tab",
     "TWO_FINGER_SWIPE_RIGHT": "next_tab",
     "THREE_FINGER_HOLD":  "open_youtube",
-    "FOUR_FINGER_HOLD":   "open_github"
+    "FOUR_FINGER_HOLD":   "open_github",
+    "INDEX_PINKY":        "open_youtube",
+    "INDEX_RING":         "open_github"
   },
   "MEDIA": {
     "PINCH_CLICK":        "play_pause",
@@ -18,9 +22,13 @@
     "OPEN_PALM":          "home_page",
     "SWIPE_LEFT":         "prev_tab",
     "SWIPE_RIGHT":        "next_tab",
+    "WHOLE_HAND_SWIPE_LEFT":  "switch_app_left",
+    "WHOLE_HAND_SWIPE_RIGHT": "switch_app_right",
     "TWO_FINGER_SWIPE_LEFT":  "prev_tab",
     "TWO_FINGER_SWIPE_RIGHT": "next_tab",
     "THREE_FINGER_HOLD":  "open_youtube",
-    "FOUR_FINGER_HOLD":   "open_github"
+    "FOUR_FINGER_HOLD":   "open_github",
+    "INDEX_PINKY":        "open_youtube",
+    "INDEX_RING":         "open_github"
   }
 }
