@@ -12,7 +12,7 @@ pyautogui.FAILSAFE = False
 # Gestures & Physics (Strict Thresholds)
 CLICK_THRESHOLD = 35
 SCROLL_THRESHOLD = 30       # Increased: Prevents accidental scrolling
-SWIPE_THRESHOLD = 80       # Increased: Requires definitive horizontal sweeps
+SWIPE_THRESHOLD = 60        # Reduced from 80: Makes swipes easier to detect
 DEADZONE = 10               # Increased: Kills micro-tremors completely
 
 # Timings & Cooldowns
