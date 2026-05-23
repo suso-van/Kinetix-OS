@@ -9,16 +9,22 @@ CAM_HEIGHT = 480
 SCREEN_WIDTH, SCREEN_HEIGHT = pyautogui.size()
 pyautogui.FAILSAFE = False
 
-# Gestures & Physics
+# Gestures & Physics (Strict Thresholds)
 CLICK_THRESHOLD = 35
-SCROLL_THRESHOLD = 25
-SWIPE_THRESHOLD = 100      # Minimum horizontal movement for a swipe
-DEADZONE = 8
-FIST_HOLD_DURATION = 2.0
-SCROLL_HOLD_DURATION = 0.15 # 150ms hold to activate scroll
-CALIBRATION_DURATION = 2.0  # Startup delay for stability
-PER_GESTURE_COOLDOWN = 1.0  # Prevent double-triggering
+SCROLL_THRESHOLD = 30       # Increased: Prevents accidental scrolling
+SWIPE_THRESHOLD = 80       # Increased: Requires definitive horizontal sweeps
+DEADZONE = 10               # Increased: Kills micro-tremors completely
 
-# Margins to map the camera frame to the full screen
-FRAME_MARGIN_X = 100
-FRAME_MARGIN_Y = 60
+# Timings & Cooldowns
+SCROLL_HOLD_DURATION = 0.08 # Time to hold posture before scroll activates
+SCROLL_COOLDOWN = 0.12       # New: Prevents rapid-fire jittery scrolling
+CALIBRATION_DURATION = 2.0
+PER_GESTURE_COOLDOWN = 1.0
+OPEN_PALM_COOLDOWN = 3.0    # New: Prevents continuous spamming of the palm action
+
+# Tracking Region (The visible interaction box)
+FRAME_MARGIN_X = 130
+FRAME_MARGIN_Y = 80
+
+CURSOR_SPEED_DIVISOR = 400   # controls adaptive smoothing sensitivity
+CURSOR_MAX_FACTOR = 0.5      # was hardcoded 0.45 in cursor.py — expose it here
