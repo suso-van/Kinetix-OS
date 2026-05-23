@@ -1,0 +1,380 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --accent:#00FFB2;--accent2:#FF5B5B;--accent3:#7B61FF;--accent4:#FFB800;
+    --bg:#0A0B0F;--bg2:#12141A;--bg3:#1A1D26;--border:rgba(255,255,255,0.08);
+    --text:#E8E9F0;--muted:#7B7D8A;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+  }
+  body{background:transparent;color:var(--text);font-family:var(--sans)}
+  .root{background:var(--bg);border-radius:16px;overflow:hidden;border:1px solid var(--border);display:flex;flex-direction:column;min-height:700px}
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:16px}
+  .logo{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);letter-spacing:0.08em}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .status-text{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .mode-pills{display:flex;gap:6px;margin-left:auto}
+  .pill{font-size:10px;font-family:var(--mono);padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s}
+  .pill.active{border-color:var(--accent);color:var(--accent);background:rgba(0,255,178,0.08)}
+  .pill:hover:not(.active){border-color:rgba(255,255,255,0.2);color:var(--text)}
+  .main{display:grid;grid-template-columns:1fr 1fr;flex:1}
+  .panel{border-right:1px solid var(--border);display:flex;flex-direction:column}
+  .panel:last-child{border-right:none}
+  .panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .panel-title{font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+  .panel-badge{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted)}
+  .panel-body{padding:16px;flex:1;display:flex;flex-direction:column;gap:12px}
+
+  /* Gesture Feed */
+  .gesture-display{background:var(--bg3);border-radius:12px;flex:1;min-height:140px;position:relative;overflow:hidden;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer}
+  .gesture-display:hover{border-color:rgba(0,255,178,0.3)}
+  .gesture-name{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);letter-spacing:0.04em}
+  .gesture-sub{font-size:11px;color:var(--muted)}
+  .gesture-ring{width:60px;height:60px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;animation:ringPulse 1.5s ease-in-out infinite}
+  @keyframes ringPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,178,0.4)}70%{box-shadow:0 0 0 10px rgba(0,255,178,0)}}
+  .confidence-bar-wrap{width:100%;padding:0 16px}
+  .confidence-label{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between}
+  .confidence-track{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+  .confidence-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+  .gesture-log{display:flex;flex-direction:column;gap:4px;max-height:90px;overflow:hidden}
+  .log-entry{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);font-size:11px;transition:all .3s}
+  .log-entry.fresh{border-color:rgba(0,255,178,0.3);background:rgba(0,255,178,0.05)}
+  .log-dot{width:5px;height:5px;border-radius:50%}
+  .log-dot.click{background:var(--accent)}
+  .log-dot.scroll{background:var(--accent3)}
+  .log-dot.palm{background:var(--accent4)}
+  .log-time{color:var(--muted);font-family:var(--mono);font-size:10px;margin-left:auto}
+
+  /* Action Map */
+  .gesture-map{display:flex;flex-direction:column;gap:8px;flex:1}
+  .map-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);transition:all .2s;cursor:pointer}
+  .map-row:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.03)}
+  .map-row.triggered{border-color:var(--accent);background:rgba(0,255,178,0.07)}
+  .map-gesture-tag{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;min-width:90px;text-align:center}
+  .tag-click{background:rgba(0,255,178,0.12);color:var(--accent);border:1px solid rgba(0,255,178,0.3)}
+  .tag-scroll{background:rgba(123,97,255,0.12);color:var(--accent3);border:1px solid rgba(123,97,255,0.3)}
+  .tag-palm{background:rgba(255,184,0,0.12);color:var(--accent4);border:1px solid rgba(255,184,0,0.3)}
+  .tag-swipe{background:rgba(255,91,91,0.12);color:var(--accent2);border:1px solid rgba(255,91,91,0.3)}
+  .map-arrow{color:var(--muted);font-size:12px}
+  .map-action{font-size:12px;color:var(--text);flex:1}
+  .map-fn{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
+  .map-flash{width:8px;height:8px;border-radius:50%;background:transparent;transition:background .15s}
+  .map-flash.on{background:var(--accent);box-shadow:0 0 6px var(--accent)}
+
+  /* System Layer */
+  .sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+  .sys-card{background:var(--bg3);border-radius:8px;border:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:border-color .2s}
+  .sys-card:hover{border-color:rgba(255,255,255,0.2)}
+  .sys-icon{font-size:18px;margin-bottom:2px}
+  .sys-label{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .sys-value{font-size:13px;color:var(--text);font-weight:500}
+  .sys-status{font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:3px;width:fit-content}
+  .sys-ok{background:rgba(0,255,178,0.1);color:var(--accent)}
+  .sys-warn{background:rgba(255,184,0,0.1);color:var(--accent4)}
+
+  /* Gesture Mgmt */
+  .mgmt-section{display:flex;flex-direction:column;gap:6px}
+  .mgmt-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px}
+  .slider-row{display:flex;align-items:center;gap:10px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--accent)}
+  .slider-val{font-family:var(--mono);font-size:11px;color:var(--accent);min-width:36px;text-align:right}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)}
+  .toggle-label{font-size:12px;color:var(--text)}
+  .toggle-sub{font-size:10px;color:var(--muted)}
+  .tog{position:relative;width:30px;height:17px;display:inline-block}
+  .tog input{opacity:0;width:0;height:0}
+  .tog-slider{position:absolute;inset:0;border-radius:17px;background:rgba(255,255,255,0.1);cursor:pointer;transition:.2s}
+  .tog-slider::before{content:'';position:absolute;width:13px;height:13px;left:2px;bottom:2px;background:var(--muted);border-radius:50%;transition:.2s}
+  .tog input:checked + .tog-slider{background:rgba(0,255,178,0.3)}
+  .tog input:checked + .tog-slider::before{transform:translateX(13px);background:var(--accent)}
+
+  /* Footer */
+  .footer{border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;background:var(--bg2)}
+  .footer-stat{font-size:10px;font-family:var(--mono);color:var(--muted)}
+  .footer-stat span{color:var(--text)}
+  .footer-btn{font-size:10px;font-family:var(--mono);padding:4px 12px;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s;margin-left:auto}
+  .footer-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .cam-feed{position:relative;background:#0a0b0f;border-radius:8px;height:60px;overflow:hidden;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+  .cam-placeholder{font-size:10px;font-family:var(--mono);color:var(--muted)}
+  .cam-corner{position:absolute;width:8px;height:8px;border-color:var(--accent);border-style:solid;opacity:.6}
+  .cam-corner.tl{top:4px;left:4px;border-width:1px 0 0 1px}
+  .cam-corner.tr{top:4px;right:4px;border-width:1px 1px 0 0}
+  .cam-corner.bl{bottom:4px;left:4px;border-width:0 0 1px 1px}
+  .cam-corner.br{bottom:4px;right:4px;border-width:0 1px 1px 0}
+</style>
+
+<div class="root">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo">KINETIX</div>
+    <div class="status-dot"></div>
+    <div class="status-text">GESTURE ENGINE ACTIVE</div>
+    <div class="mode-pills">
+      <div class="pill active" onclick="setMode(this,'BROWSER')">Browser</div>
+      <div class="pill" onclick="setMode(this,'MEDIA')">Media</div>
+      <div class="pill" onclick="setMode(this,'DOCTOR')">Doctor</div>
+      <div class="pill" onclick="setMode(this,'PRESENT')">Present</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Panel 1: Gesture Feed -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Gesture Feed</div>
+        <div class="panel-badge" id="fps-badge">30 fps</div>
+      </div>
+      <div class="panel-body">
+        <div class="gesture-display" onclick="triggerDemo()">
+          <div class="gesture-ring" id="gesture-ring">✌️</div>
+          <div class="gesture-name" id="gesture-name">PINCH CLICK</div>
+          <div class="gesture-sub" id="gesture-sub">index + thumb · 22px apart</div>
+          <div class="confidence-bar-wrap">
+            <div class="confidence-label">
+              <span>confidence</span>
+              <span id="conf-pct">94%</span>
+            </div>
+            <div class="confidence-track"><div class="confidence-fill" id="conf-fill" style="width:94%"></div></div>
+          </div>
+        </div>
+        <div class="gesture-log" id="gesture-log">
+          <div class="log-entry fresh"><div class="log-dot click"></div>PINCH_CLICK detected<div class="log-time">0.0s</div></div>
+          <div class="log-entry"><div class="log-dot scroll"></div>SCROLL_UP triggered<div class="log-time">1.2s</div></div>
+          <div class="log-entry"><div class="log-dot palm"></div>OPEN_PALM blocked · cooldown<div class="log-time">2.8s</div></div>
+          <div class="log-entry"><div class="log-dot click"></div>PINCH_CLICK detected<div class="log-time">4.1s</div></div>
+        </div>
+        <div class="cam-feed">
+          <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+          <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+          <div class="cam-placeholder">[ webcam feed · 640×480 ]</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 2: Action Map -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Action Map</div>
+        <div class="panel-badge" id="mode-display">BROWSER MODE</div>
+      </div>
+      <div class="panel-body">
+        <div class="gesture-map" id="action-map">
+          <div class="map-row triggered" id="map-pinch">
+            <div class="map-gesture-tag tag-click">PINCH_CLICK</div>
+            <div class="map-arrow">→</div>
+            <div class="map-action">pyautogui.click()</div>
+            <div class="map-fn">perform_click()</div>
+            <div class="map-flash on" id="flash-pinch"></div>
+          </div>
+          <div class="map-row" id="map-scroll-up">
+            <div class="map-gesture-tag tag-scroll">SCROLL_UP</div>
+            <div class="map-arrow">→</div>
+            <div class="map-action">pyautogui.scroll(+80)</div>
+            <div class="map-fn">detect_scroll()</div>
+            <div class="map-flash" id="flash-sup"></div>
+          </div>
+          <div class="map-row" id="map-scroll-dn">
+            <div class="map-gesture-tag tag-scroll">SCROLL_DOWN</div>
+            <div class="map-arrow">→</div>
+            <div class="map-action">pyautogui.scroll(-80)</div>
+            <div class="map-fn">detect_scroll()</div>
+            <div class="map-flash" id="flash-sdn"></div>
+          </div>
+          <div class="map-row" id="map-palm">
+            <div class="map-gesture-tag tag-palm">OPEN_PALM</div>
+            <div class="map-arrow">→</div>
+            <div class="map-action">webbrowser.open(youtube)</div>
+            <div class="map-fn">launch_youtube()</div>
+            <div class="map-flash" id="flash-palm"></div>
+          </div>
+          <div class="map-row" id="map-swipe">
+            <div class="map-gesture-tag tag-swipe">SWIPE_LEFT</div>
+            <div class="map-arrow">→</div>
+            <div class="map-action">keyboard.press('alt+left')</div>
+            <div class="map-fn">tab_back()</div>
+            <div class="map-flash" id="flash-swipe"></div>
+          </div>
+          <div class="map-row" id="map-fist">
+            <div class="map-gesture-tag tag-swipe">FIST_HOLD</div>
+            <div class="map-arrow">→</div>
+            <div class="map-action">subprocess.Popen(launcher)</div>
+            <div class="map-fn">open_app()</div>
+            <div class="map-flash" id="flash-fist"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="main" style="border-top:1px solid var(--border)">
+    <!-- Panel 3: System Layer -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">System Layer</div>
+        <div class="panel-badge">pyautogui · keyboard · subprocess</div>
+      </div>
+      <div class="panel-body">
+        <div class="sys-grid">
+          <div class="sys-card" onclick="sendPrompt('How do I add keyboard shortcuts to Kinetix gesture actions?')">
+            <div class="sys-icon">🖱</div>
+            <div class="sys-label">Cursor</div>
+            <div class="sys-value" id="cursor-pos">x:847 y:512</div>
+            <div class="sys-status sys-ok">TRACKING</div>
+          </div>
+          <div class="sys-card" onclick="sendPrompt('How do I add media playback control gestures to Kinetix?')">
+            <div class="sys-icon">⏯</div>
+            <div class="sys-label">Media</div>
+            <div class="sys-value">Spotify</div>
+            <div class="sys-status sys-ok">READY</div>
+          </div>
+          <div class="sys-card" onclick="sendPrompt('How do I implement tab switching with gestures in Kinetix?')">
+            <div class="sys-icon">🌐</div>
+            <div class="sys-label">Browser</div>
+            <div class="sys-value">Chrome · 3 tabs</div>
+            <div class="sys-status sys-ok">ACTIVE</div>
+          </div>
+          <div class="sys-card" onclick="sendPrompt('How do I launch custom apps with gestures in Kinetix?')">
+            <div class="sys-icon">⚡</div>
+            <div class="sys-label">App Launch</div>
+            <div class="sys-value">subprocess</div>
+            <div class="sys-status sys-warn">STANDBY</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 4: Gesture Management -->
+    <div class="panel" style="border-right:none">
+      <div class="panel-header">
+        <div class="panel-title">Gesture Management</div>
+        <div class="panel-badge">smoothing · cooldown · deadzone</div>
+      </div>
+      <div class="panel-body">
+        <div class="mgmt-section">
+          <div class="mgmt-label">Smoothing Factor</div>
+          <div class="slider-row">
+            <input type="range" min="5" max="60" value="20" oninput="updateSlider(this,'smooth-val',v=>v/100)">
+            <div class="slider-val" id="smooth-val">0.20</div>
+          </div>
+        </div>
+        <div class="mgmt-section">
+          <div class="mgmt-label">Click Cooldown (s)</div>
+          <div class="slider-row">
+            <input type="range" min="2" max="20" value="8" oninput="updateSlider(this,'cool-val',v=>v/10)">
+            <div class="slider-val" id="cool-val">0.8s</div>
+          </div>
+        </div>
+        <div class="mgmt-section">
+          <div class="mgmt-label">Pinch Threshold (px)</div>
+          <div class="slider-row">
+            <input type="range" min="15" max="60" value="35" oninput="updateSlider(this,'thresh-val',v=>v+'px')">
+            <div class="slider-val" id="thresh-val">35px</div>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Deadzone Guard</div><div class="toggle-sub">Ignore jitter &lt; 8px</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="tog-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Gesture Confirmation</div><div class="toggle-sub">Hold 80ms before fire</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="tog-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Palm Lockout</div><div class="toggle-sub">Block during scroll</div></div>
+          <label class="tog"><input type="checkbox"><span class="tog-slider"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-stat">FPS <span id="fps-stat">30</span></div>
+    <div class="footer-stat">LATENCY <span id="lat-stat">18ms</span></div>
+    <div class="footer-stat">HANDS <span>1</span></div>
+    <div class="footer-stat">UPTIME <span id="uptime">00:00</span></div>
+    <button class="footer-btn" onclick="sendPrompt('How do I add a new custom gesture to Kinetix with a JSON config file?')">+ Add Gesture ↗</button>
+    <button class="footer-btn" onclick="sendPrompt('Generate a backup demo script for Kinetix that simulates gesture events without a webcam')">Record Demo ↗</button>
+  </div>
+</div>
+
+<script>
+const GESTURES = [
+  {emoji:'✌️',name:'PINCH_CLICK',sub:'index + thumb · close proximity',conf:94,dot:'click',map:'map-pinch',flash:'flash-pinch'},
+  {emoji:'☝️',name:'CURSOR_MOVE',sub:'index tip · tracking active',conf:99,dot:'scroll',map:'map-scroll-up',flash:'flash-sup'},
+  {emoji:'🖐️',name:'OPEN_PALM',sub:'4 fingers extended · wrist up',conf:87,dot:'palm',map:'map-palm',flash:'flash-palm'},
+  {emoji:'👇',name:'SCROLL_DOWN',sub:'index drift +y · threshold',conf:91,dot:'scroll',map:'map-scroll-dn',flash:'flash-sdn'},
+  {emoji:'👆',name:'SCROLL_UP',sub:'index drift -y · threshold',conf:88,dot:'scroll',map:'map-scroll-dn',flash:'flash-sup'},
+  {emoji:'✋',name:'SWIPE_LEFT',sub:'lateral sweep · velocity',conf:83,dot:'click',map:'map-swipe',flash:'flash-swipe'},
+];
+
+let gIdx = 0, timer = 0, uptime = 0;
+
+function cycleGesture(){
+  const g = GESTURES[gIdx % GESTURES.length]; gIdx++;
+  document.getElementById('gesture-ring').textContent = g.emoji;
+  document.getElementById('gesture-name').textContent = g.name;
+  document.getElementById('gesture-sub').textContent = g.sub;
+  document.getElementById('conf-pct').textContent = g.conf+'%';
+  document.getElementById('conf-fill').style.width = g.conf+'%';
+  document.querySelectorAll('.map-row').forEach(r=>r.classList.remove('triggered'));
+  document.querySelectorAll('.map-flash').forEach(f=>f.classList.remove('on'));
+  const mr = document.getElementById(g.map);
+  const fl = document.getElementById(g.flash);
+  if(mr) mr.classList.add('triggered');
+  if(fl) fl.classList.add('on');
+  const log = document.getElementById('gesture-log');
+  const e = document.createElement('div');
+  e.className='log-entry fresh';
+  e.innerHTML=`<div class="log-dot ${g.dot}"></div>${g.name} detected<div class="log-time">0.0s</div>`;
+  log.insertBefore(e, log.firstChild);
+  setTimeout(()=>e.classList.remove('fresh'),600);
+  const entries = log.querySelectorAll('.log-entry');
+  entries.forEach((el,i)=>{
+    const t = el.querySelector('.log-time');
+    if(t) t.textContent = (i*1.2).toFixed(1)+'s';
+  });
+  if(entries.length>5) entries[entries.length-1].remove();
+}
+
+function triggerDemo(){cycleGesture()}
+
+function updateSlider(el, outId, fmt){
+  document.getElementById(outId).textContent = fmt(+el.value);
+}
+
+function setMode(el, mode){
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('mode-display').textContent = mode+' MODE';
+  const maps = {
+    BROWSER:['pyautogui.click()','pyautogui.scroll(+80)','pyautogui.scroll(-80)','webbrowser.open(youtube)','keyboard.press("alt+left")','subprocess.Popen(launcher)'],
+    MEDIA:['keyboard.press("space")','keyboard.press("vol_up")','keyboard.press("vol_dn")','keyboard.press("next_track")','keyboard.press("prev_track")','keyboard.press("mute")'],
+    DOCTOR:['pymouse.move(x,y)','scroll(report_up)','scroll(report_dn)','subprocess.open(dicom)','keyboard("ctrl+z")','keyboard("ctrl+s")'],
+    PRESENT:['keyboard("right")','keyboard("up")','keyboard("down")','keyboard("b")','keyboard("left")','keyboard("f5")'],
+  };
+  const actions = maps[mode]||maps.BROWSER;
+  document.querySelectorAll('.map-action').forEach((el,i)=>{
+    if(actions[i]) el.textContent = actions[i];
+  });
+}
+
+function updateStats(){
+  uptime++;
+  const m = String(Math.floor(uptime/60)).padStart(2,'0');
+  const s = String(uptime%60).padStart(2,'0');
+  document.getElementById('uptime').textContent = m+':'+s;
+  const fps = 28+Math.floor(Math.random()*5);
+  document.getElementById('fps-stat').textContent = fps;
+  document.getElementById('fps-badge').textContent = fps+' fps';
+  document.getElementById('lat-stat').textContent = (14+Math.floor(Math.random()*10))+'ms';
+  const cx = 200+Math.floor(Math.random()*1200);
+  const cy = 100+Math.floor(Math.random()*700);
+  document.getElementById('cursor-pos').textContent = 'x:'+cx+' y:'+cy;
+}
+
+setInterval(cycleGesture, 2200);
+setInterval(updateStats, 1000);
+</script>
