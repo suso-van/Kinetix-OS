@@ -334,140 +334,22 @@ export default function App() {
               <div className="relative">
                 <svg viewBox="0 0 350 100" className="w-72 sm:w-[480px] text-teal-300 drop-shadow-[0_0_24px_rgba(45,212,191,0.3)]">
                   <g stroke="currentColor" fill="none" fillRule="evenodd" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3">
-                    {/* K - Vertical Stem */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={0} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 20,25 L 20,75"
-                    />
-                    {/* K - Top Slant */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={1} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 50,25 L 20,50"
-                    />
-                    {/* K - Bottom Slant */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={2} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 22,48 L 50,75"
-                    />
-                    
-                    {/* I - Vertical Stem */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={3} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 80,25 L 80,75"
-                    />
-                    
-                    {/* N - Left Spine */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={4} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 105,75 L 105,25"
-                    />
-                    {/* N - Diagonal Spine */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={5} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 105,25 L 140,75"
-                    />
-                    {/* N - Right Spine */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={6} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 140,75 L 140,25"
-                    />
-                    
-                    {/* E - Spine */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={7} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 160,75 L 160,25"
-                    />
-                    {/* E - Top prong */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={8} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 160,25 L 190,25"
-                    />
-                    {/* E - Mid prong */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={9} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 160,50 L 185,50"
-                    />
-                    {/* E - Bottom prong */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={10} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 160,75 L 190,75"
-                    />
-                    
-                    {/* T - Top Crossbar */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={11} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 210,25 L 240,25"
-                    />
-                    {/* T - Stem */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={12} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 225,25 L 225,75"
-                    />
-                    
-                    {/* I - Stem */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={13} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 265,25 L 265,75"
-                    />
-                    
-                    {/* X - Falling Diagonal */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={14} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 295,25 L 330,75"
-                    />
-                    {/* X - Rising Diagonal */}
-                    <motion.path 
-                      variants={pathVariants} 
-                      custom={15} 
-                      initial="hidden" 
-                      animate="visible" 
-                      d="M 330,25 L 295,75"
-                    />
+                    <motion.path variants={pathVariants} custom={0} initial="hidden" animate="visible" d="M 20,25 L 20,75" />
+                    <motion.path variants={pathVariants} custom={1} initial="hidden" animate="visible" d="M 50,25 L 20,50" />
+                    <motion.path variants={pathVariants} custom={2} initial="hidden" animate="visible" d="M 22,48 L 50,75" />
+                    <motion.path variants={pathVariants} custom={3} initial="hidden" animate="visible" d="M 80,25 L 80,75" />
+                    <motion.path variants={pathVariants} custom={4} initial="hidden" animate="visible" d="M 105,75 L 105,25" />
+                    <motion.path variants={pathVariants} custom={5} initial="hidden" animate="visible" d="M 105,25 L 140,75" />
+                    <motion.path variants={pathVariants} custom={6} initial="hidden" animate="visible" d="M 140,75 L 140,25" />
+                    <motion.path variants={pathVariants} custom={7} initial="hidden" animate="visible" d="M 160,75 L 160,25" />
+                    <motion.path variants={pathVariants} custom={8} initial="hidden" animate="visible" d="M 160,25 L 190,25" />
+                    <motion.path variants={pathVariants} custom={9} initial="hidden" animate="visible" d="M 160,50 L 185,50" />
+                    <motion.path variants={pathVariants} custom={10} initial="hidden" animate="visible" d="M 160,75 L 190,75" />
+                    <motion.path variants={pathVariants} custom={11} initial="hidden" animate="visible" d="M 210,25 L 240,25" />
+                    <motion.path variants={pathVariants} custom={12} initial="hidden" animate="visible" d="M 225,25 L 225,75" />
+                    <motion.path variants={pathVariants} custom={13} initial="hidden" animate="visible" d="M 265,25 L 265,75" />
+                    <motion.path variants={pathVariants} custom={14} initial="hidden" animate="visible" d="M 295,25 L 330,75" />
+                    <motion.path variants={pathVariants} custom={15} initial="hidden" animate="visible" d="M 330,25 L 295,75" />
                   </g>
                 </svg>
               </div>
@@ -535,8 +417,8 @@ export default function App() {
         {/* Brand block & Header diagnostics */}
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-sea-green to-aquamarine-accent flex items-center justify-center font-display font-black text-[#0a111a] shadow-[0_0_20px_rgba(32,178,170,0.45)] text-base italic select-none">
-              κ
+            <div className="h-9 w-9 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(32,178,170,0.35)]">
+              <img src="/kinetix-logo.png" alt="Kinetix" className="h-full w-full object-contain select-none" draggable={false} />
             </div>
             <div>
               <h1 className="text-base font-display font-bold text-white tracking-widest uppercase">
