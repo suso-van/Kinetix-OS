@@ -24,17 +24,14 @@ ACTION_HANDLERS = {
   "new_tab": lambda: keyboard.press_and_release("ctrl+t"),
   "open_youtube": lambda: webbrowser.open("https://youtube.com"),
   "open_github": lambda: webbrowser.open("https://github.com"),
-  # New app switching actions
-  "switch_app_left": lambda: keyboard.press_and_release("alt+shift+tab") if platform.system() == "Windows"
-  else (
-    lambda: subprocess.run(["osascript", "-e", 'tell application "System Events" to key code 48 using command down'])),
-  "switch_app_right": lambda: keyboard.press_and_release("alt+tab") if platform.system() == "Windows"
-  else (lambda: subprocess.run(
-    ["osascript", "-e", 'tell application "System Events" to key code 48 using {command down, shift down}'])),
+  # App switching for macOS
+  "switch_app_left": lambda: keyboard.press_and_release("cmd+shift+tab"),
+  "switch_app_right": lambda: keyboard.press_and_release("cmd+tab"),
 }
 
 HOLD_GESTURES = {"THREE_FINGER_HOLD", "FOUR_FINGER_HOLD", "INDEX_PINKY", "INDEX_RING"}
-HOLD_DURATION = 0.6  # seconds the pose must be held before firing
+# Shorter hold duration for better responsiveness
+HOLD_DURATION = 0.4  # Reduced from 0.6 seconds
 
 
 def reload_mappings(self):
@@ -88,7 +85,7 @@ class TRAEWorkflowRouter:
     elif "SCROLL" in gesture_name:
       cooldown = SCROLL_COOLDOWN
     elif "SWIPE" in gesture_name:
-      cooldown = 0.5  # Faster cooldown for swipes
+      cooldown = 0.3  # Faster cooldown for swipes (was 0.5)
 
     if now - self.last_action_times.get(gesture_name, 0) < cooldown:
       # Still reset hold timer so it doesn't carry over
@@ -100,10 +97,12 @@ class TRAEWorkflowRouter:
     if gesture_name in HOLD_GESTURES:
       if gesture_name not in self.hold_start_times:
         self.hold_start_times[gesture_name] = now
+        print(f"[TRAE] Started holding: {gesture_name}")  # Debug output
         return  # first frame — start the clock, don't fire yet
       elif now - self.hold_start_times[gesture_name] < HOLD_DURATION:
         return  # still holding, not long enough
       else:
+        print(f"[TRAE] Hold complete: {gesture_name}")  # Debug output
         self.hold_start_times.pop(gesture_name)  # held long enough — fall through and fire
 
     action_key = self.mappings.get(self.current_mode, {}).get(gesture_name)
@@ -112,9 +111,9 @@ class TRAEWorkflowRouter:
       if action_key in ["prev_tab", "next_tab"]:
         self._focus_browser()
 
+      print(f"[TRAE] 🔥 EXECUTING: {gesture_name} → {action_key}")  # Clear debug output
       ACTION_HANDLERS[action_key]()
       self.last_action_times[gesture_name] = now
       self.latest_gesture = gesture_name
       self.latest_action = action_key
       self.action_display_time = now
-      print(f"[TRAE] {gesture_name} → {action_key}")
