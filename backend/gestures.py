@@ -1,9 +1,10 @@
 # gestures.py
 import math
-from config import CLICK_THRESHOLD, SCROLL_THRESHOLD
+from collections import deque
+from config import CLICK_THRESHOLD, SCROLL_THRESHOLD, SWIPE_THRESHOLD
 
-# State for scrolling
 prev_scroll_y = 0
+swipe_buffer = deque(maxlen=10) # Track last 10 frames of X position
 
 def detect_pinch(thumb, index):
     return math.hypot(thumb[0] - index[0], thumb[1] - index[1]) < CLICK_THRESHOLD
@@ -27,3 +28,21 @@ def detect_fist(pixel_landmarks):
     mcps = [5, 9, 13, 17]
     closed_count = sum(1 for tip, mcp in zip(tips, mcps) if pixel_landmarks[tip][1] > pixel_landmarks[mcp][1])
     return closed_count >= 4
+
+def is_scroll_posture(pixel_landmarks):
+    index_up = pixel_landmarks[8][1] < pixel_landmarks[6][1]
+    middle_up = pixel_landmarks[12][1] < pixel_landmarks[10][1]
+    ring_down = pixel_landmarks[16][1] > pixel_landmarks[14][1]
+    return index_up and middle_up and ring_down
+
+def detect_swipe(index_tip):
+    swipe_buffer.append(index_tip[0])
+    if len(swipe_buffer) == swipe_buffer.maxlen:
+        diff = swipe_buffer[-1] - swipe_buffer[0]
+        if diff > SWIPE_THRESHOLD:
+            swipe_buffer.clear()
+            return "SWIPE_RIGHT"
+        elif diff < -SWIPE_THRESHOLD:
+            swipe_buffer.clear()
+            return "SWIPE_LEFT"
+    return None
