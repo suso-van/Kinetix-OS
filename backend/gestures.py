@@ -4,8 +4,9 @@ from collections import deque
 from config import CLICK_THRESHOLD, SCROLL_THRESHOLD, SWIPE_THRESHOLD
 
 prev_scroll_y = 0
-swipe_buffer = deque(maxlen=15)
-whole_hand_swipe_buffer = deque(maxlen=20)  # Separate buffer for whole hand swipes
+# Separate buffers for different gesture types
+two_finger_swipe_buffer = deque(maxlen=8)  # Smaller buffer for faster detection
+whole_hand_swipe_buffer = deque(maxlen=10)
 scroll_y_buffer = deque(maxlen=4)
 _palm_open_state = False
 
@@ -65,13 +66,35 @@ def detect_specific_finger_combination(pixel_landmarks):
 
 def detect_two_finger_swipe(pixel_landmarks, index_tip):
   """Index + middle up, ring + pinky down."""
+  global two_finger_swipe_buffer
+
   index_up = pixel_landmarks[8][1] < pixel_landmarks[6][1]
   middle_up = pixel_landmarks[12][1] < pixel_landmarks[10][1]
   ring_down = pixel_landmarks[16][1] > pixel_landmarks[14][1]
   pinky_down = pixel_landmarks[20][1] > pixel_landmarks[18][1]
 
   if index_up and middle_up and ring_down and pinky_down:
-    return detect_swipe(index_tip, buffer_type="two_finger")  # Use two-finger specific buffer
+    # Track the X position for swipe detection
+    two_finger_swipe_buffer.append(index_tip[0])
+
+    if len(two_finger_swipe_buffer) == two_finger_swipe_buffer.maxlen:
+      # Calculate total movement
+      start_x = two_finger_swipe_buffer[0]
+      end_x = two_finger_swipe_buffer[-1]
+      movement = end_x - start_x
+
+      # Check if movement exceeds threshold
+      if movement > SWIPE_THRESHOLD:
+        two_finger_swipe_buffer.clear()
+        return "SWIPE_RIGHT"
+      elif movement < -SWIPE_THRESHOLD:
+        two_finger_swipe_buffer.clear()
+        return "SWIPE_LEFT"
+  else:
+    # Clear buffer if posture is broken
+    if len(two_finger_swipe_buffer) > 0:
+      two_finger_swipe_buffer.clear()
+
   return None
 
 
@@ -98,7 +121,6 @@ def detect_open_palm(pixel_landmarks):
                    if pixel_landmarks[tip][1] < pixel_landmarks[pip][1])
 
   # Open: require 4 fingers. Close: only drop out at 2 or fewer.
-  # This prevents flickering at the 3-finger boundary.
   if open_count >= 4:
     _palm_open_state = True
   elif open_count <= 2:
@@ -111,7 +133,8 @@ def is_scroll_posture(pixel_landmarks):
   index_up = pixel_landmarks[8][1] < pixel_landmarks[6][1]
   middle_up = pixel_landmarks[12][1] < pixel_landmarks[10][1]
   ring_down = pixel_landmarks[16][1] > pixel_landmarks[14][1]
-  return index_up and middle_up and ring_down
+  pinky_down = pixel_landmarks[20][1] > pixel_landmarks[18][1]
+  return index_up and middle_up and ring_down and pinky_down
 
 
 def is_navigation_posture(pixel_landmarks):
@@ -124,51 +147,35 @@ def is_navigation_posture(pixel_landmarks):
 
 
 def is_swipe_posture(pixel_landmarks):
-  # Require an open hand to initiate a swipe
+  # Open hand for whole-hand swipe
   return detect_open_palm(pixel_landmarks)
 
 
-def detect_swipe(index_tip, buffer_type="whole_hand"):
-  """Detect swipe gesture with separate buffers for whole hand vs two-finger"""
-  global swipe_buffer, whole_hand_swipe_buffer
-
-  # Use appropriate buffer
-  if buffer_type == "two_finger":
-    buffer = swipe_buffer
-  else:
-    buffer = whole_hand_swipe_buffer
-
-  buffer.append(index_tip[0])
-
-  if len(buffer) == buffer.maxlen:
-    # Calculate movement with acceleration detection
-    start_pos = buffer[0]
-    end_pos = buffer[-1]
-    diff = end_pos - start_pos
-
-    # Check for consistent direction (not oscillating)
-    mid_pos = buffer[len(buffer) // 2]
-    mid_diff = mid_pos - start_pos
-
-    # Ensure movement is consistently in one direction
-    if diff > SWIPE_THRESHOLD and mid_diff > 0:
-      buffer.clear()
-      if buffer_type == "two_finger":
-        return "SWIPE_RIGHT"
-      else:
-        return "WHOLE_HAND_SWIPE_RIGHT"
-    elif diff < -SWIPE_THRESHOLD and mid_diff < 0:
-      buffer.clear()
-      if buffer_type == "two_finger":
-        return "SWIPE_LEFT"
-      else:
-        return "WHOLE_HAND_SWIPE_LEFT"
-
-  return None
-
-
 def detect_whole_hand_swipe(pixel_landmarks, palm_center):
-  """Detect whole hand swipe (app switching)"""
+  """Detect whole hand swipe for app switching"""
+  global whole_hand_swipe_buffer
+
+  # Check if hand is open (all fingers extended)
   if detect_open_palm(pixel_landmarks):
-    return detect_swipe(palm_center, buffer_type="whole_hand")
+    # Track palm center X position for swipe detection
+    whole_hand_swipe_buffer.append(palm_center[0])
+
+    if len(whole_hand_swipe_buffer) == whole_hand_swipe_buffer.maxlen:
+      # Calculate total movement
+      start_x = whole_hand_swipe_buffer[0]
+      end_x = whole_hand_swipe_buffer[-1]
+      movement = end_x - start_x
+
+      # Check if movement exceeds threshold (higher threshold for whole hand)
+      if movement > SWIPE_THRESHOLD * 1.5:  # Need more deliberate movement
+        whole_hand_swipe_buffer.clear()
+        return "WHOLE_HAND_SWIPE_RIGHT"
+      elif movement < -SWIPE_THRESHOLD * 1.5:
+        whole_hand_swipe_buffer.clear()
+        return "WHOLE_HAND_SWIPE_LEFT"
+  else:
+    # Clear buffer if posture is broken
+    if len(whole_hand_swipe_buffer) > 0:
+      whole_hand_swipe_buffer.clear()
+
   return None
