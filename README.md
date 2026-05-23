@@ -127,3 +127,4 @@ The system operates on a continuous loop of Perception, Reasoning, and Execution
 ```bash
 git clone [https://github.com/susovanchatterjee/kinetix.git](https://github.com/susovanchatterjee/kinetix.git)
 cd kinetix
+```
