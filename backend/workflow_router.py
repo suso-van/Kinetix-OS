@@ -10,28 +10,37 @@ from config import PER_GESTURE_COOLDOWN, OPEN_PALM_COOLDOWN, SCROLL_COOLDOWN
 
 # Clean macOS-friendly browser controls
 ACTION_HANDLERS = {
-    "click":        lambda: pyautogui.click(),
-    "scroll_up":    lambda: pyautogui.scroll(60),      # was 25 — too subtle
-    "scroll_down":  lambda: pyautogui.scroll(-60),
-    "home_page":    lambda: webbrowser.open("https://google.com"),
-    "prev_tab":     lambda: keyboard.press_and_release("ctrl+shift+tab"),  # faster than hotkey()
-    "next_tab":     lambda: keyboard.press_and_release("ctrl+tab"),
-    "play_pause":   lambda: keyboard.press_and_release("playpause"),
-    "vol_up":       lambda: keyboard.press_and_release("volumeup"),
-    "vol_down":     lambda: keyboard.press_and_release("volumedown"),
-    "undo":         lambda: keyboard.press_and_release("ctrl+z"),
-    "close_tab":    lambda: keyboard.press_and_release("ctrl+w"),
-    "new_tab":      lambda: keyboard.press_and_release("ctrl+t"),
-    "open_youtube": lambda: webbrowser.open("https://youtube.com"),
-    "open_github":  lambda: webbrowser.open("https://github.com"),
+  "click": lambda: pyautogui.click(),
+  "scroll_up": lambda: pyautogui.scroll(60),
+  "scroll_down": lambda: pyautogui.scroll(-60),
+  "home_page": lambda: webbrowser.open("https://google.com"),
+  "prev_tab": lambda: keyboard.press_and_release("ctrl+shift+tab"),
+  "next_tab": lambda: keyboard.press_and_release("ctrl+tab"),
+  "play_pause": lambda: keyboard.press_and_release("playpause"),
+  "vol_up": lambda: keyboard.press_and_release("volumeup"),
+  "vol_down": lambda: keyboard.press_and_release("volumedown"),
+  "undo": lambda: keyboard.press_and_release("ctrl+z"),
+  "close_tab": lambda: keyboard.press_and_release("ctrl+w"),
+  "new_tab": lambda: keyboard.press_and_release("ctrl+t"),
+  "open_youtube": lambda: webbrowser.open("https://youtube.com"),
+  "open_github": lambda: webbrowser.open("https://github.com"),
+  # New app switching actions
+  "switch_app_left": lambda: keyboard.press_and_release("alt+shift+tab") if platform.system() == "Windows"
+  else (
+    lambda: subprocess.run(["osascript", "-e", 'tell application "System Events" to key code 48 using command down'])),
+  "switch_app_right": lambda: keyboard.press_and_release("alt+tab") if platform.system() == "Windows"
+  else (lambda: subprocess.run(
+    ["osascript", "-e", 'tell application "System Events" to key code 48 using {command down, shift down}'])),
 }
 
-HOLD_GESTURES = {"THREE_FINGER_HOLD", "FOUR_FINGER_HOLD"}
-HOLD_DURATION = 0.6   # seconds the pose must be held before firing
+HOLD_GESTURES = {"THREE_FINGER_HOLD", "FOUR_FINGER_HOLD", "INDEX_PINKY", "INDEX_RING"}
+HOLD_DURATION = 0.6  # seconds the pose must be held before firing
+
 
 def reload_mappings(self):
   self.load_mappings()
   print("[TRAE] Mappings reloaded.")
+
 
 class TRAEWorkflowRouter:
   def __init__(self):
@@ -78,6 +87,8 @@ class TRAEWorkflowRouter:
       cooldown = OPEN_PALM_COOLDOWN
     elif "SCROLL" in gesture_name:
       cooldown = SCROLL_COOLDOWN
+    elif "SWIPE" in gesture_name:
+      cooldown = 0.5  # Faster cooldown for swipes
 
     if now - self.last_action_times.get(gesture_name, 0) < cooldown:
       # Still reset hold timer so it doesn't carry over
@@ -85,7 +96,7 @@ class TRAEWorkflowRouter:
         self.hold_start_times.pop(gesture_name, None)
       return
 
-    # Hold-duration guard for static finger-count gestures
+    # Hold-duration guard for static finger-count gestures and finger combinations
     if gesture_name in HOLD_GESTURES:
       if gesture_name not in self.hold_start_times:
         self.hold_start_times[gesture_name] = now
@@ -97,6 +108,10 @@ class TRAEWorkflowRouter:
 
     action_key = self.mappings.get(self.current_mode, {}).get(gesture_name)
     if action_key and action_key in ACTION_HANDLERS:
+      # Special handling for tab switching - ensure browser is focused
+      if action_key in ["prev_tab", "next_tab"]:
+        self._focus_browser()
+
       ACTION_HANDLERS[action_key]()
       self.last_action_times[gesture_name] = now
       self.latest_gesture = gesture_name
