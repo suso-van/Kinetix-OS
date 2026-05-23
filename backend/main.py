@@ -53,6 +53,9 @@ calibration_start_time = None
 is_calibrated = False
 scroll_posture_start = None
 
+# Debug counters
+frame_count = 0
+
 while True:
   success, image = cap.read()
   if not success: break
@@ -74,7 +77,7 @@ while True:
     pixel_landmarks = [(int(lm.x * w), int(lm.y * h)) for lm in results.hand_landmarks[0]]
     draw_hand(image, pixel_landmarks)
 
-    # Get palm center (landmark 0)
+    # Get palm center (landmark 0 - wrist)
     palm_center = pixel_landmarks[0]
 
     if not is_calibrated:
@@ -91,15 +94,27 @@ while True:
     index_tip = pixel_landmarks[8]
     thumb_tip = pixel_landmarks[4]
 
+    # Check postures for debugging
+    nav_posture = gestures.is_navigation_posture(pixel_landmarks)
+    scroll_posture = gestures.is_scroll_posture(pixel_landmarks)
+    open_palm = gestures.detect_open_palm(pixel_landmarks)
+
+    # Draw posture info on screen
+    y_offset = 200
+    cv.putText(image, f"Nav: {nav_posture}", (20, y_offset), cv.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+    cv.putText(image, f"Scroll: {scroll_posture}", (20, y_offset + 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200),
+               1)
+    cv.putText(image, f"Open Palm: {open_palm}", (20, y_offset + 40), cv.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+
     # 1. Cursor movement (STRICTLY tied to navigation posture)
-    if gestures.is_navigation_posture(pixel_landmarks):
+    if nav_posture:
       cursor_active = True
       cursor.move(index_tip[0], index_tip[1])
       if gestures.detect_pinch(thumb_tip, index_tip):
         router.execute_action("PINCH_CLICK")
 
     # 2. Scrolling
-    elif gestures.is_scroll_posture(pixel_landmarks):
+    elif scroll_posture:
       if scroll_posture_start is None:
         scroll_posture_start = time.time()
       elif time.time() - scroll_posture_start >= SCROLL_HOLD_DURATION:
@@ -109,23 +124,18 @@ while True:
     else:
       scroll_posture_start = None
 
-    # 3. Whole Hand Swipe (App Switching) - HIGHEST PRIORITY
+    # 3. Whole Hand Swipe (App Switching) - HIGH PRIORITY
     whole_hand_swipe = gestures.detect_whole_hand_swipe(pixel_landmarks, palm_center)
     if whole_hand_swipe:
       router.execute_action(whole_hand_swipe)
 
     # 4. Two-finger swipe (tab switching)
     two_finger_swipe = gestures.detect_two_finger_swipe(pixel_landmarks, index_tip)
-    if two_finger_swipe == "SWIPE_LEFT":
-      router.execute_action("TWO_FINGER_SWIPE_LEFT")
-    elif two_finger_swipe == "SWIPE_RIGHT":
-      router.execute_action("TWO_FINGER_SWIPE_RIGHT")
+    if two_finger_swipe:
+      router.execute_action(two_finger_swipe)
 
-    # 5. Static finger-count gestures (3 = YouTube, 4 = GitHub)
-    # Only check when NOT in navigation or scroll posture to avoid conflicts
-    if (not gestures.is_navigation_posture(pixel_landmarks) and
-        not gestures.is_scroll_posture(pixel_landmarks)):
-
+    # 5. Static finger gestures (only when not in navigation or scroll)
+    if not nav_posture and not scroll_posture:
       # Check for specific finger combinations (Index+Pinky, Index+Ring)
       finger_combo = gestures.detect_specific_finger_combination(pixel_landmarks)
       if finger_combo:
@@ -143,7 +153,8 @@ while True:
   else:
     scroll_posture_start = None
     calibration_start_time = None
-    gestures.swipe_buffer.clear()
+    # Clear buffers when no hand detected
+    gestures.two_finger_swipe_buffer.clear()
     gestures.whole_hand_swipe_buffer.clear()
 
   # UI Dashboard
@@ -155,11 +166,13 @@ while True:
                status_color, 2)
 
     if time.time() - router.action_display_time < 1.5:
-      cv.putText(image, f"DETECTED: {router.latest_gesture}", (20, 120), cv.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200),
-                 2)
+      # Highlight swipe actions
+      color = (100, 255, 100) if "SWIPE" in router.latest_gesture else (200, 200, 200)
+      cv.putText(image, f"DETECTED: {router.latest_gesture}", (20, 120), cv.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
       cv.putText(image, f"ROUTED  : {router.latest_action}", (20, 150), cv.FONT_HERSHEY_SIMPLEX, 0.7, (100, 255, 100),
                  2)
 
+  frame_count += 1
   cv.imshow("TRAE Spatial Browser", image)
   if cv.waitKey(1) == 27:
     break
