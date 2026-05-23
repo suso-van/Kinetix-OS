@@ -74,6 +74,9 @@ while True:
     pixel_landmarks = [(int(lm.x * w), int(lm.y * h)) for lm in results.hand_landmarks[0]]
     draw_hand(image, pixel_landmarks)
 
+    # Get palm center (landmark 0)
+    palm_center = pixel_landmarks[0]
+
     if not is_calibrated:
       if calibration_start_time is None:
         calibration_start_time = time.time()
@@ -106,19 +109,10 @@ while True:
     else:
       scroll_posture_start = None
 
-    # 3. Swipes (STRICTLY tied to open palm posture)
-    if gestures.is_swipe_posture(pixel_landmarks):
-      swipe_dir = gestures.detect_swipe(index_tip)
-      if swipe_dir:
-        router.execute_action(swipe_dir)
-      else:
-        # Only fire OPEN_PALM when hand is genuinely still —
-        # not while a swipe is building in the buffer
-        x_drift = 0
-        if len(gestures.swipe_buffer) >= 3:
-          x_drift = abs(gestures.swipe_buffer[-1] - gestures.swipe_buffer[0])
-        if x_drift < 25:
-          router.execute_action("OPEN_PALM")
+    # 3. Whole Hand Swipe (App Switching) - HIGHEST PRIORITY
+    whole_hand_swipe = gestures.detect_whole_hand_swipe(pixel_landmarks, palm_center)
+    if whole_hand_swipe:
+      router.execute_action(whole_hand_swipe)
 
     # 4. Two-finger swipe (tab switching)
     two_finger_swipe = gestures.detect_two_finger_swipe(pixel_landmarks, index_tip)
@@ -131,18 +125,26 @@ while True:
     # Only check when NOT in navigation or scroll posture to avoid conflicts
     if (not gestures.is_navigation_posture(pixel_landmarks) and
         not gestures.is_scroll_posture(pixel_landmarks)):
+
+      # Check for specific finger combinations (Index+Pinky, Index+Ring)
+      finger_combo = gestures.detect_specific_finger_combination(pixel_landmarks)
+      if finger_combo:
+        router.execute_action(finger_combo)
+
+      # Check for finger count gestures
       finger_gesture = gestures.detect_finger_count_gesture(pixel_landmarks)
       if finger_gesture:
         router.execute_action(finger_gesture)
       else:
         # Clear hold timers if the pose was broken before firing
-        router.hold_start_times.pop("THREE_FINGER_HOLD", None)
-        router.hold_start_times.pop("FOUR_FINGER_HOLD", None)
+        for gesture in ["THREE_FINGER_HOLD", "FOUR_FINGER_HOLD", "INDEX_PINKY", "INDEX_RING"]:
+          router.hold_start_times.pop(gesture, None)
 
   else:
     scroll_posture_start = None
     calibration_start_time = None
     gestures.swipe_buffer.clear()
+    gestures.whole_hand_swipe_buffer.clear()
 
   # UI Dashboard
   if is_calibrated:
