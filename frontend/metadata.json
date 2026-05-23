@@ -1,0 +1,6 @@
+{
+  "name": "Kinetix",
+  "description": "A zero-touch gesture-to-action control system with fluid animations, custom gesture mappings, and a live feedback orb.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
