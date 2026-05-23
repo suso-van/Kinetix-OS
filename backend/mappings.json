@@ -10,8 +10,6 @@
     "WHOLE_HAND_SWIPE_RIGHT": "switch_app_right",
     "TWO_FINGER_SWIPE_LEFT":  "prev_tab",
     "TWO_FINGER_SWIPE_RIGHT": "next_tab",
-    "THREE_FINGER_HOLD":  "open_youtube",
-    "FOUR_FINGER_HOLD":   "open_github",
     "INDEX_PINKY":        "open_youtube",
     "INDEX_RING":         "open_github"
   },
@@ -26,8 +24,6 @@
     "WHOLE_HAND_SWIPE_RIGHT": "switch_app_right",
     "TWO_FINGER_SWIPE_LEFT":  "prev_tab",
     "TWO_FINGER_SWIPE_RIGHT": "next_tab",
-    "THREE_FINGER_HOLD":  "open_youtube",
-    "FOUR_FINGER_HOLD":   "open_github",
     "INDEX_PINKY":        "open_youtube",
     "INDEX_RING":         "open_github"
   }

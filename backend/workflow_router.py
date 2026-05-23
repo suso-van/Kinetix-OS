@@ -8,11 +8,10 @@ import json
 import keyboard
 from config import PER_GESTURE_COOLDOWN, OPEN_PALM_COOLDOWN, SCROLL_COOLDOWN
 
-# Clean macOS-friendly browser controls
 ACTION_HANDLERS = {
   "click": lambda: pyautogui.click(),
-  "scroll_up": lambda: pyautogui.scroll(60),
-  "scroll_down": lambda: pyautogui.scroll(-60),
+  "scroll_up": lambda: pyautogui.scroll(30),
+  "scroll_down": lambda: pyautogui.scroll(-30),
   "home_page": lambda: webbrowser.open("https://google.com"),
   "prev_tab": lambda: keyboard.press_and_release("ctrl+shift+tab"),
   "next_tab": lambda: keyboard.press_and_release("ctrl+tab"),
@@ -24,14 +23,12 @@ ACTION_HANDLERS = {
   "new_tab": lambda: keyboard.press_and_release("ctrl+t"),
   "open_youtube": lambda: webbrowser.open("https://youtube.com"),
   "open_github": lambda: webbrowser.open("https://github.com"),
-  # App switching for macOS
-  "switch_app_left": lambda: keyboard.press_and_release("cmd+shift+tab"),
-  "switch_app_right": lambda: keyboard.press_and_release("cmd+tab"),
+  "switch_app_left": lambda: keyboard.press_and_release("alt+shift+tab"),
+  "switch_app_right": lambda: keyboard.press_and_release("alt+tab"),
 }
 
-HOLD_GESTURES = {"THREE_FINGER_HOLD", "FOUR_FINGER_HOLD", "INDEX_PINKY", "INDEX_RING"}
-# Shorter hold duration for better responsiveness
-HOLD_DURATION = 0.4  # Reduced from 0.6 seconds
+HOLD_GESTURES = {"INDEX_PINKY", "INDEX_RING"}
+HOLD_DURATION = 0.4
 
 
 def reload_mappings(self):
@@ -61,14 +58,12 @@ class TRAEWorkflowRouter:
       self.mappings = {"BROWSER": {}}
 
   def _focus_browser(self):
-    """Bring the browser to front before sending tab hotkeys."""
     try:
-      if platform.system() == "Darwin":  # macOS
+      if platform.system() == "Darwin":
         subprocess.run(["osascript", "-e",
                         'tell application "Google Chrome" to activate'],
                        capture_output=True)
       elif platform.system() == "Windows":
-        # Windows: pygetwindow is more reliable
         import pygetwindow as gw
         wins = gw.getWindowsWithTitle("Chrome")
         if wins:
@@ -79,39 +74,39 @@ class TRAEWorkflowRouter:
   def execute_action(self, gesture_name):
     now = time.time()
 
+    # --- DYNAMIC TIMEOUTS ---
     cooldown = PER_GESTURE_COOLDOWN
     if gesture_name == "OPEN_PALM":
       cooldown = OPEN_PALM_COOLDOWN
     elif "SCROLL" in gesture_name:
       cooldown = SCROLL_COOLDOWN
+    elif "WHOLE_HAND_SWIPE" in gesture_name:
+      cooldown = 1.2  # LONG TIMEOUT: Prevents accidental app-switch spamming
     elif "SWIPE" in gesture_name:
-      cooldown = 0.3  # Faster cooldown for swipes (was 0.5)
+      cooldown = 0.8  # MEDIUM TIMEOUT: Prevents accidental tab-switch spamming
 
     if now - self.last_action_times.get(gesture_name, 0) < cooldown:
-      # Still reset hold timer so it doesn't carry over
       if gesture_name in HOLD_GESTURES:
         self.hold_start_times.pop(gesture_name, None)
       return
 
-    # Hold-duration guard for static finger-count gestures and finger combinations
     if gesture_name in HOLD_GESTURES:
       if gesture_name not in self.hold_start_times:
         self.hold_start_times[gesture_name] = now
-        print(f"[TRAE] Started holding: {gesture_name}")  # Debug output
-        return  # first frame — start the clock, don't fire yet
+        print(f"[TRAE] Started holding: {gesture_name}")
+        return
       elif now - self.hold_start_times[gesture_name] < HOLD_DURATION:
-        return  # still holding, not long enough
+        return
       else:
-        print(f"[TRAE] Hold complete: {gesture_name}")  # Debug output
-        self.hold_start_times.pop(gesture_name)  # held long enough — fall through and fire
+        print(f"[TRAE] Hold complete: {gesture_name}")
+        self.hold_start_times.pop(gesture_name)
 
     action_key = self.mappings.get(self.current_mode, {}).get(gesture_name)
     if action_key and action_key in ACTION_HANDLERS:
-      # Special handling for tab switching - ensure browser is focused
       if action_key in ["prev_tab", "next_tab"]:
         self._focus_browser()
 
-      print(f"[TRAE] 🔥 EXECUTING: {gesture_name} → {action_key}")  # Clear debug output
+      print(f"[TRAE] 🔥 EXECUTING: {gesture_name} → {action_key}")
       ACTION_HANDLERS[action_key]()
       self.last_action_times[gesture_name] = now
       self.latest_gesture = gesture_name

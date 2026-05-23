@@ -113,7 +113,7 @@ while True:
       if gestures.detect_pinch(thumb_tip, index_tip):
         router.execute_action("PINCH_CLICK")
 
-    # 2. Scrolling
+      # 2. Scrolling
     elif scroll_posture:
       if scroll_posture_start is None:
         scroll_posture_start = time.time()
@@ -122,7 +122,9 @@ while True:
         if scroll_dir:
           router.execute_action(scroll_dir)
     else:
+      # CRITICAL: Reset the hold timer AND the scroll anchor
       scroll_posture_start = None
+      gestures.reset_scroll_anchor()
 
     # 3. Whole Hand Swipe (App Switching) - HIGH PRIORITY
     whole_hand_swipe = gestures.detect_whole_hand_swipe(pixel_landmarks, palm_center)
@@ -140,14 +142,9 @@ while True:
       finger_combo = gestures.detect_specific_finger_combination(pixel_landmarks)
       if finger_combo:
         router.execute_action(finger_combo)
-
-      # Check for finger count gestures
-      finger_gesture = gestures.detect_finger_count_gesture(pixel_landmarks)
-      if finger_gesture:
-        router.execute_action(finger_gesture)
       else:
         # Clear hold timers if the pose was broken before firing
-        for gesture in ["THREE_FINGER_HOLD", "FOUR_FINGER_HOLD", "INDEX_PINKY", "INDEX_RING"]:
+        for gesture in ["INDEX_PINKY", "INDEX_RING"]:
           router.hold_start_times.pop(gesture, None)
 
   else:
